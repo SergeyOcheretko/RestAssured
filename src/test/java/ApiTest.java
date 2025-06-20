@@ -176,7 +176,8 @@ public class ApiTest {
     }
 
   @Test
-public void healthCheck(){
+@DisplayName("Проверка работоспособности API")
+  public void healthCheck(){
         given()
                 .header("Cookie", "token=" + token)
                 .when()
