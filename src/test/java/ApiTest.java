@@ -177,6 +177,7 @@ public class ApiTest {
 
   @Test
 @DisplayName("Проверка работоспособности API")
+  @Severity(SeverityLevel.MINOR)
   public void healthCheck(){
         given()
                 .header("Cookie", "token=" + token)
