@@ -95,12 +95,15 @@
                                 <argument>-d</argument>
                                 <argument>parse_mode=HTML</argument>
                                 <argument>-d</argument>
-                                <argument>text=✅ &lt;b&gt;Сборка завершена&lt;/b&gt;%0A&lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Смотреть в Jenkins&lt;/a&gt;</argument>
+                                <argument>
+                                    text=✅ &lt;b&gt;RestAssuredTests: сборка завершена&lt;/b&gt;%0A📊 &lt;a href='http://localhost:8080/job/RestAssuredTests/lastSuccessfulBuild/allure/'&gt;Allure-отчёт&lt;/a&gt;%0A🔗 &lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Перейти к билду&lt;/a&gt;%0A🕒 Длительность: примерно $BUILD_DURATION
+                                </argument>
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
 
 
 
