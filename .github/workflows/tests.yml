@@ -58,3 +58,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./target/allure-report
           force_orphan: true
+
