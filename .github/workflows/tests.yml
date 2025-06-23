@@ -1,9 +1,11 @@
-jobs:
-  on:
-    push:
-      branches: [ main ]
-    workflow_dispatch:
+name: RestAssured API Tests
 
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
   test:
     runs-on: ubuntu-latest
 
@@ -21,7 +23,7 @@ jobs:
         run: mvn clean test
 
       - name: 🔍 Check allure-results
-        run: ls -la target/allure-results
+        run: ls -la target/allure-results || echo "📂 Папка отсутствует"
 
       - name: 📊 Generate Allure report
         run: |
@@ -29,7 +31,7 @@ jobs:
           allure generate target/allure-results --clean -o target/allure-report
 
       - name: 🔍 Debug Allure report contents
-        run: ls -la target/allure-report
+        run: ls -la target/allure-report || echo "⚠️ Нет отчёта для публикации"
 
       - name: 🗃️ Upload Allure report as artifact
         uses: actions/upload-artifact@v4
@@ -66,5 +68,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
-
 
