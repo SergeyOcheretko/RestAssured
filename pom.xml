@@ -77,12 +77,12 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
+
+                    <!-- ✅ Уведомление при SUCCESS -->
                     <execution>
-                        <id>telegram-notify</id>
+                        <id>telegram-success</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
+                        <goals><goal>exec</goal></goals>
                         <configuration>
                             <executable>curl</executable>
                             <arguments>
@@ -96,11 +96,28 @@
                                 <argument>parse_mode=HTML</argument>
                                 <argument>-d</argument>
                                 <argument>
-                                    text=✅ &lt;b&gt;RestAssuredTests: сборка завершена&lt;/b&gt;%0A📊 &lt;a href='http://localhost:8080/job/RestAssuredTests/lastSuccessfulBuild/allure/'&gt;Allure-отчёт&lt;/a&gt;%0A🔗 &lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Перейти к билду&lt;/a&gt;%0A🕒 Длительность: примерно $BUILD_DURATION
+                                    text=✅ &lt;b&gt;RestAssuredTests — сборка успешна&lt;/b&gt;%0A
+                                    📊 &lt;a href='http://localhost:8080/job/RestAssuredTests/lastSuccessfulBuild/allure/'&gt;Allure-отчёт&lt;/a&gt;%0A
+                                    🔗 &lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Смотреть в Jenkins&lt;/a&gt;
                                 </argument>
                             </arguments>
                         </configuration>
                     </execution>
+
+                    <!-- ❌ Уведомление при FAILURE -->
+                    <execution>
+                        <id>telegram-failure</id>
+                        <phase>post-integration-test</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <executable>cmd</executable>
+                            <arguments>
+                                <argument>/c</argument>
+                                <argument>if not %ERRORLEVEL%==0 (curl -s -X POST https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage -d chat_id=488207930 -d parse_mode=HTML -d "text=❌ &lt;b&gt;RestAssuredTests: Сборка упала&lt;/b&gt;%0A🔗 &lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Перейти в Jenkins&lt;/a&gt;")</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+
                 </executions>
             </plugin>
 
