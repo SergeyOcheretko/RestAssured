@@ -19,11 +19,22 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
+      - name: 📦 Maven dependency check (Allure presence)
+        run: mvn dependency:tree | grep allure || echo "⚠️ Allure не найден среди зависимостей"
+
       - name: 🧪 Run tests
         run: mvn clean test
 
-      - name: 🔍 Check allure-results
-        run: ls -la target/allure-results || echo "📂 Папка отсутствует"
+      - name: 🔍 Check allure-results contents
+        run: |
+          echo "📂 Файлы в target/allure-results:"
+          ls -la target/allure-results || echo "❌ Папка отсутствует"
+          echo "📊 Всего файлов:"
+          FILE_COUNT=$(find target/allure-results -type f | wc -l)
+          echo "Найдено файлов: $FILE_COUNT"
+          if [ "$FILE_COUNT" -eq "0" ]; then
+            echo "❌ Нет данных для Allure — отчёт будет пустой"
+          fi
 
       - name: 📊 Generate Allure report
         run: |
@@ -42,8 +53,11 @@ jobs:
       - name: 📬 Send Telegram notification with button
         run: |
           STATUS=${{ job.status }}
-          if [ "$STATUS" == "success" ]; then
+          FILE_COUNT=$(find target/allure-results -type f | wc -l)
+          if [ "$STATUS" == "success" ] && [ "$FILE_COUNT" -gt "0" ]; then
             TEXT="✅ RestAssuredTests — сборка успешна"
+          elif [ "$STATUS" == "success" ] && [ "$FILE_COUNT" -eq "0" ]; then
+            TEXT="⚠️ RestAssuredTests — сборка успешна, но Allure-отчёт пуст"
           elif [ "$STATUS" == "failure" ]; then
             TEXT="❌ RestAssuredTests — ошибка в тестах"
           else
@@ -68,4 +82,3 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
-
