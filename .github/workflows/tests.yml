@@ -24,7 +24,7 @@ jobs:
 
       - name: 📊 Generate Allure report
         run: |
-          mkdir -p target/allure-report
+          mkdir -p target/allure-results
           npm install -g allure-commandline --force
           allure generate target/allure-results --clean -o target/allure-report
 
@@ -56,6 +56,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./target/allure-report
+          publish_dir: ./target/allure-results
           force_orphan: true
 
