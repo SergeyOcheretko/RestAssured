@@ -72,6 +72,36 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>telegram-notify</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>curl</executable>
+                            <arguments>
+                                <argument>-s</argument>
+                                <argument>-X</argument>
+                                <argument>POST</argument>
+                                <argument>https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage</argument>
+                                <argument>-d</argument>
+                                <argument>chat_id=488207930</argument>
+                                <argument>-d</argument>
+                                <argument>parse_mode=HTML</argument>
+                                <argument>-d</argument>
+                                <argument>text=✅ &lt;b&gt;Сборка завершена&lt;/b&gt;%0A&lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Смотреть в Jenkins&lt;/a&gt;</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
 
 
         </plugins>
