@@ -63,63 +63,28 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <allure.results.directory>target/allure-results</allure.results.directory>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <executions>
-
-                    <!-- ✅ Уведомление при SUCCESS -->
                     <execution>
-                        <id>telegram-success</id>
+                        <id>telegram-notify</id>
                         <phase>verify</phase>
-                        <goals><goal>exec</goal></goals>
-                        <configuration>
-                            <executable>curl</executable>
-                            <arguments>
-                                <argument>-s</argument>
-                                <argument>-X</argument>
-                                <argument>POST</argument>
-                                <argument>https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage</argument>
-                                <argument>-d</argument>
-                                <argument>chat_id=488207930</argument>
-                                <argument>-d</argument>
-                                <argument>parse_mode=HTML</argument>
-                                <argument>-d</argument>
-                                <argument>
-                                    text=✅ &lt;b&gt;RestAssuredTests — сборка успешна&lt;/b&gt;%0A
-                                    📊 &lt;a href='http://localhost:8080/job/RestAssuredTests/lastSuccessfulBuild/allure/'&gt;Allure-отчёт&lt;/a&gt;%0A
-                                    🔗 &lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Смотреть в Jenkins&lt;/a&gt;
-                                </argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-
-                    <!-- ❌ Уведомление при FAILURE -->
-                    <execution>
-                        <id>telegram-failure</id>
-                        <phase>post-integration-test</phase>
                         <goals><goal>exec</goal></goals>
                         <configuration>
                             <executable>cmd</executable>
                             <arguments>
                                 <argument>/c</argument>
-                                <argument>if not %ERRORLEVEL%==0 (curl -s -X POST https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage -d chat_id=488207930 -d parse_mode=HTML -d "text=❌ &lt;b&gt;RestAssuredTests: Сборка упала&lt;/b&gt;%0A🔗 &lt;a href='http://localhost:8080/job/RestAssuredTests/'&gt;Перейти в Jenkins&lt;/a&gt;")</argument>
+                                <argument>
+                                    curl -s -X POST https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage -d chat_id=488207930 -d parse_mode=HTML -d "text=✅ RestAssuredTests — сборка успешна" --data-urlencode "reply_markup@src/test/resources/keyboard.json"
+                                </argument>
                             </arguments>
                         </configuration>
                     </execution>
-
                 </executions>
             </plugin>
+
+
 
 
 
