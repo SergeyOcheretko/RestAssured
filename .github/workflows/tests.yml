@@ -3,7 +3,7 @@ name: RestAssured API Tests
 on:
   push:
     branches: [main]
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   test:
@@ -59,10 +59,11 @@ jobs:
 
           $executor | Out-File -Encoding utf8 "target\allure-results\executor.json"
 
-          $envLines = @()
-          $envLines += "CI=GitHub Actions"
-          $envLines += "OS=windows-latest"
-          $envLines += "Java=17"
+          $envLines = @(
+            "CI=GitHub Actions",
+            "OS=windows-latest",
+            "Java=17"
+          )
           $envLines | Out-File -Encoding utf8 "target\allure-results\environment.properties"
 
       - name: 📊 Generate Allure report
@@ -70,12 +71,6 @@ jobs:
         run: |
           npm install -g allure-commandline --force
           allure generate target\allure-results --clean -o target\allure-report
-
-  - name: 🔍 Check generated history
-    shell: pwsh
-    run: |
-      Write-Output "📂 Содержимое target\allure-report\history:"
-      Get-ChildItem -Recurse -Path "target\allure-report\history" | Select-Object FullName
 
       - name: 📬 Telegram notification
         shell: pwsh
@@ -106,6 +101,7 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
+
 
 
 
