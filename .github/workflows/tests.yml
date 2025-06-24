@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: Windows
+    runs-on: windows-latest
 
     steps:
       - name: 🧾 Checkout code
