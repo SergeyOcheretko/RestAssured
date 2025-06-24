@@ -19,73 +19,85 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: 🪄 Clone gh-pages to get previous history
+      - name: 🪄 Clone gh-pages to get history
         continue-on-error: true
+        shell: pwsh
         run: |
           git config --global user.email "github-actions@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
-          git clone --depth=1 --branch=gh-pages https://github.com/${{ github.repository }} gh-pages-copy || echo "⚠️ gh-pages branch not found"
+          git clone --depth=1 --branch=gh-pages https://github.com/${{ github.repository }} gh-pages-copy
 
-      - name: 📂 Copy history into results (Windows)
+      - name: 📂 Copy history into results
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path target\allure-results\history | Out-Null
+          New-Item -ItemType Directory -Force -Path "target\allure-results\history" | Out-Null
           if (Test-Path "gh-pages-copy\history") {
-            Copy-Item -Path "gh-pages-copy\history\*" -Destination "target\allure-results\history" -Recurse -Force
+            Copy-Item "gh-pages-copy\history\*" -Destination "target\allure-results\history" -Recurse -Force
           } else {
-            Write-Output "📭 История из gh-pages не найдена"
+            Write-Output "📭 История не найдена"
           }
 
-
       - name: 🧪 Run tests
+        shell: pwsh
         run: mvn clean test
 
       - name: 🧬 Add Allure metadata
+        shell: pwsh
         run: |
-          mkdir -p target/allure-results
-          echo '{
-            "name": "GitHub Actions",
-            "type": "github",
-            "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "buildName": "${{ github.workflow }}",
-            "buildOrder": "${{ github.run_number }}",
-            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }' > target/allure-results/executor.json
+          if (-not (Test-Path "target\allure-results")) {
+            New-Item -ItemType Directory -Path "target\allure-results"
+          }
 
-          echo "CI=GitHub Actions" > target/allure-results/environment.properties
-          echo "OS=ubuntu-latest" >> target/allure-results/environment.properties
-          echo "Java=17" >> target/allure-results/environment.properties
+          @'
+  {
+    "name": "GitHub Actions",
+    "type": "github",
+    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+    "buildName": "${{ github.workflow }}",
+    "buildOrder": "${{ github.run_number }}",
+    "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  }
+  '@ | Set-Content "target\allure-results\executor.json"
+
+          @"
+CI=GitHub Actions
+OS=windows-latest
+Java=17
+"@ | Set-Content "target\allure-results\environment.properties"
 
       - name: 📊 Generate Allure report
+        shell: pwsh
         run: |
           npm install -g allure-commandline --force
-          allure generate target/allure-results --clean -o target/allure-report
+          allure generate target\allure-results --clean -o target\allure-report
 
       - name: 📬 Telegram notification
+        shell: pwsh
         run: |
-          COUNT=$(find target/allure-results -type f | wc -l)
-          if [ "$COUNT" -eq 0 ]; then
-            TEXT="⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
-          else
-            TEXT="✅ RestAssuredTests — сборка успешна"
-          fi
+          $count = (Get-ChildItem -Recurse -File target\allure-results | Measure-Object).Count
+          if ($count -eq 0) {
+            $text = "⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
+          } else {
+            $text = "✅ RestAssuredTests — сборка успешна"
+          }
 
-          curl -s -X POST "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" \
-            -d chat_id=488207930 \
-            -d parse_mode=HTML \
-            --data-urlencode "text=$TEXT" \
-            --data-urlencode "reply_markup={
-              \"inline_keyboard\": [[
-                {\"text\": \"📊 Смотреть Allure-отчёт\", \"url\": \"https://sergeyocheretko.github.io/RestAssured/\"}
-              ]]
-            }"
+          $url = "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage"
+          $body = @{
+            chat_id = 488207930
+            parse_mode = "HTML"
+            text = $text
+            reply_markup = '{"inline_keyboard":[[{"text":"📊 Смотреть Allure-отчёт","url":"https://sergeyocheretko.github.io/RestAssured/"}]]}'
+}
 
-      - name: 🚀 Deploy to GitHub Pages (preserves trend)
-        if: success()
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: target/allure-report
-          force_orphan: true
+  Invoke-RestMethod -Uri $url -Method Post -Body $body
+
+- name: 🚀 Deploy to GitHub Pages
+  if: success()
+  uses: peaceiris/actions-gh-pages@v4
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    publish_branch: gh-pages
+    publish_dir: target/allure-report
+    force_orphan: true
+
 
