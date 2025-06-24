@@ -48,48 +48,48 @@ jobs:
             New-Item -ItemType Directory -Path "target\allure-results"
           }
 
-          @'
-  {
-    "name": "GitHub Actions",
-    "type": "github",
-    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-    "buildName": "${{ github.workflow }}",
-    "buildOrder": "${{ github.run_number }}",
-    "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  }
-  '@ | Set-Content "target\allure-results\executor.json"
+          $executor = @{
+            name = "GitHub Actions"
+            type = "github"
+            url = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            buildName = "${{ github.workflow }}"
+            buildOrder = "${{ github.run_number }}"
+            buildUrl = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } | ConvertTo-Json -Depth 2
+
+          $executor | Set-Content "target\allure-results\executor.json" -Encoding UTF8
 
           @"
-CI=GitHub Actions
-OS=windows-latest
-Java=17
-"@ | Set-Content "target\allure-results\environment.properties"
+  CI=GitHub Actions
+  OS=windows-latest
+  Java=17
+  "@ | Set-Content "target\allure-results\environment.properties"
 
-      - name: 📊 Generate Allure report
-        shell: pwsh
-        run: |
-          npm install -g allure-commandline --force
-          allure generate target\allure-results --clean -o target\allure-report
+- name: 📊 Generate Allure report
+  shell: pwsh
+  run: |
+    npm install -g allure-commandline --force
+    allure generate target\allure-results --clean -o target\allure-report
 
-    - name: 📬 Telegram notification
-      shell: pwsh
-      run: |
-        $count = (Get-ChildItem -Recurse -File target\allure-results | Measure-Object).Count
-        if ($count -eq 0) {
-          $text = "⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
-        } else {
-          $text = "✅ RestAssuredTests — сборка успешна"
-        }
+- name: 📬 Telegram notification
+  shell: pwsh
+  run: |
+    $count = (Get-ChildItem -Recurse -File target\allure-results | Measure-Object).Count
+    if ($count -eq 0) {
+      $text = "⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
+    } else {
+      $text = "✅ RestAssuredTests — сборка успешна"
+    }
 
-        $url = "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage"
-        $body = @{
-          chat_id = 488207930
-          parse_mode = "HTML"
-          text = $text
-          reply_markup = '{ "inline_keyboard": [ [ { "text": "📊 Смотреть Allure-отчёт","url": "https://sergeyocheretko.github.io/RestAssured/" } ] ] }'
-}
+    $url = "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage"
+    $body = @{
+      chat_id = 488207930
+      parse_mode = "HTML"
+      text = $text
+      reply_markup = '{"inline_keyboard":[[{"text":"📊 Смотреть Allure-отчёт","url":"https://sergeyocheretko.github.io/RestAssured/"}]]}'
+    }
 
-  Invoke-RestMethod -Uri $url -Method Post -Body $body
+    Invoke-RestMethod -Uri $url -Method Post -Body $body
 
 - name: 🚀 Deploy to GitHub Pages
   if: success()
@@ -99,3 +99,4 @@ Java=17
     publish_branch: gh-pages
     publish_dir: target/allure-report
     force_orphan: true
+
