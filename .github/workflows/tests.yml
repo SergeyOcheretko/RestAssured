@@ -33,8 +33,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path "target\allure-results\history" | Out-Null
           if (Test-Path "gh-pages-copy\history") {
             Copy-Item "gh-pages-copy\history\*" -Destination "target\allure-results\history" -Recurse -Force
+            Write-Output "✅ История успешно скопирована"
           } else {
-            Write-Output "📭 История не найдена"
+            Write-Output "📭 История из gh-pages не найдена"
           }
 
       - name: 🧪 Run tests
@@ -72,6 +73,16 @@ jobs:
           npm install -g allure-commandline --force
           allure generate target\allure-results --clean -o target\allure-report
 
+      - name: 🔍 Проверим сгенерированную history
+        shell: pwsh
+        run: |
+          if (Test-Path "target\allure-report\history") {
+            Write-Output "📦 Allure-сгенерированная история:"
+            Get-ChildItem -Path "target\allure-report\history"
+          } else {
+            Write-Output "❌ Allure не сгенерировал history"
+          }
+
       - name: 📬 Telegram notification
         shell: pwsh
         run: |
@@ -93,14 +104,22 @@ jobs:
 
           Invoke-RestMethod -Uri $url -Method Post -Body $body
 
-    - name: 🚀 Deploy to GitHub Pages
-      if: success()
-      uses: peaceiris/actions-gh-pages@v4
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_branch: gh-pages
-        publish_dir: target/allure-report
-        force_orphan: true
+      - name: 🚀 Deploy to GitHub Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/allure-report
+          force_orphan: true
+
+      - name: 🧾 Проверка содержимого gh-pages после публикации
+        shell: pwsh
+        run: |
+          git clone --depth=1 --branch=gh-pages https://github.com/${{ github.repository }} gh-pages-check
+          Write-Output "📂 Файлы внутри gh-pages/history:"
+          Get-ChildItem -Path "gh-pages-check\history"
+
 
 
 
