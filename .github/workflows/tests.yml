@@ -67,8 +67,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: allure-history
-          path: target/allure-results/history
-
+          path: target/allure-report/history
 
       - name: 🗃️ Upload Allure report
         uses: actions/upload-artifact@v4
