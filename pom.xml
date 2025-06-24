@@ -96,7 +96,7 @@
                         <id>allure-results</id>
                         <phase>test</phase>
                         <goals>
-                            <goal>serve</goal>
+                            <goal>report</goal>
                         </goals>
                     </execution>
                 </executions>
