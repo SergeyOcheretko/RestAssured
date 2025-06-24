@@ -19,49 +19,41 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: 📦 Maven dependency check (Allure presence)
-        run: mvn dependency:tree | grep allure || echo "⚠️ Allure не найден среди зависимостей"
+      - name: 📦 Ensure Allure results directory
+        run: mkdir -p target/allure-results
+
+      - name: 📚 Check Maven dependencies
+        run: mvn dependency:tree | grep allure || echo "⚠️ Allure не найден"
 
       - name: 🧪 Run tests
         run: mvn clean test
 
-      - name: 🔍 Check allure-results contents
+      - name: 🔍 Check allure-results files
         run: |
-          echo "📂 Файлы в target/allure-results:"
-          ls -la target/allure-results || echo "❌ Папка отсутствует"
-          echo "📊 Всего файлов:"
-          FILE_COUNT=$(find target/allure-results -type f | wc -l)
-          echo "Найдено файлов: $FILE_COUNT"
-          if [ "$FILE_COUNT" -eq "0" ]; then
-            echo "❌ Нет данных для Allure — отчёт будет пустой"
-          fi
+          echo "Файлы в target/allure-results:"
+          find target/allure-results -type f
+          echo "Итого:"
+          find target/allure-results -type f | wc -l
 
       - name: 📊 Generate Allure report
         run: |
           npm install -g allure-commandline --force
           allure generate target/allure-results --clean -o target/allure-report
 
-      - name: 🔍 Debug Allure report contents
-        run: ls -la target/allure-report || echo "⚠️ Нет отчёта для публикации"
+      - name: 🔎 Debug Allure report
+        run: ls -la target/allure-report || echo "⚠️ Allure отчёт не создан"
 
-      - name: 🗃️ Upload Allure report as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: target/allure-report
-
-      - name: 📬 Send Telegram notification with button
+      - name: 📬 Notify via Telegram
         run: |
           STATUS=${{ job.status }}
-          FILE_COUNT=$(find target/allure-results -type f | wc -l)
-          if [ "$STATUS" == "success" ] && [ "$FILE_COUNT" -gt "0" ]; then
-            TEXT="✅ RestAssuredTests — сборка успешна"
-          elif [ "$STATUS" == "success" ] && [ "$FILE_COUNT" -eq "0" ]; then
-            TEXT="⚠️ RestAssuredTests — сборка успешна, но Allure-отчёт пуст"
-          elif [ "$STATUS" == "failure" ]; then
-            TEXT="❌ RestAssuredTests — ошибка в тестах"
+          COUNT=$(find target/allure-results -type f | wc -l)
+
+          if [ "$STATUS" = "success" ] && [ "$COUNT" -gt 0 ]; then
+            TEXT="✅ RestAssuredTests — успешная сборка"
+          elif [ "$STATUS" = "success" ] && [ "$COUNT" -eq 0 ]; then
+            TEXT="⚠️ RestAssuredTests — сборка успешна, но Allure пуст"
           else
-            TEXT="⚠️ RestAssuredTests — статус: $STATUS"
+            TEXT="❌ RestAssuredTests — ошибка в тестах"
           fi
 
           curl -s -X POST "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" \
@@ -82,3 +74,80 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
+name: RestAssured API Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      - name: 📦 Ensure Allure results directory
+        run: mkdir -p target/allure-results
+
+      - name: 📚 Check Maven dependencies
+        run: mvn dependency:tree | grep allure || echo "⚠️ Allure не найден"
+
+      - name: 🧪 Run tests
+        run: mvn clean test
+
+      - name: 🔍 Check allure-results files
+        run: |
+          echo "Файлы в target/allure-results:"
+          find target/allure-results -type f
+          echo "Итого:"
+          find target/allure-results -type f | wc -l
+
+      - name: 📊 Generate Allure report
+        run: |
+          npm install -g allure-commandline --force
+          allure generate target/allure-results --clean -o target/allure-report
+
+      - name: 🔎 Debug Allure report
+        run: ls -la target/allure-report || echo "⚠️ Allure отчёт не создан"
+
+      - name: 📬 Notify via Telegram
+        run: |
+          STATUS=${{ job.status }}
+          COUNT=$(find target/allure-results -type f | wc -l)
+
+          if [ "$STATUS" = "success" ] && [ "$COUNT" -gt 0 ]; then
+            TEXT="✅ RestAssuredTests — успешная сборка"
+          elif [ "$STATUS" = "success" ] && [ "$COUNT" -eq 0 ]; then
+            TEXT="⚠️ RestAssuredTests — сборка успешна, но Allure пуст"
+          else
+            TEXT="❌ RestAssuredTests — ошибка в тестах"
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" \
+            -d chat_id=488207930 \
+            -d parse_mode=HTML \
+            --data-urlencode "text=$TEXT" \
+            --data-urlencode "reply_markup={
+              \"inline_keyboard\": [[
+                {\"text\": \"📊 Смотреть Allure-отчёт\", \"url\": \"https://sergeyocheretko.github.io/RestAssured/\"}
+              ]]
+            }"
+
+      - name: 🚀 Deploy to GitHub Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/allure-report
+          force_orphan: true
+
