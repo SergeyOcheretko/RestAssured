@@ -82,6 +82,7 @@ jobs:
     }
 
     $url = "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage"
+
     $body = @{
       chat_id = 488207930
       parse_mode = "HTML"
@@ -99,4 +100,5 @@ jobs:
     publish_branch: gh-pages
     publish_dir: target/allure-report
     force_orphan: true
+
 
