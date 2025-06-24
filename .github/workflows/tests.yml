@@ -26,14 +26,16 @@ jobs:
           git config --global user.name "GitHub Actions"
           git clone --depth=1 --branch=gh-pages https://github.com/${{ github.repository }} gh-pages-copy || echo "⚠️ gh-pages branch not found"
 
-      - name: 📂 Copy history into results
+      - name: 📂 Copy history into results (Windows)
+        shell: pwsh
         run: |
-          mkdir -p target/allure-results/history
-          if [ -d gh-pages-copy/history ]; then
-            cp -r gh-pages-copy/history/* target/allure-results/history/ || echo "⏳ No history to copy"
-          else
-            echo "📭 История из gh-pages не найдена"
-          fi
+          New-Item -ItemType Directory -Force -Path target\allure-results\history | Out-Null
+          if (Test-Path "gh-pages-copy\history") {
+            Copy-Item -Path "gh-pages-copy\history\*" -Destination "target\allure-results\history" -Recurse -Force
+          } else {
+            Write-Output "📭 История из gh-pages не найдена"
+          }
+
 
       - name: 🧪 Run tests
         run: mvn clean test
