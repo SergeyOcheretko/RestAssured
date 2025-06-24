@@ -26,11 +26,17 @@ jobs:
           name: allure-history
           path: target/allure-history
 
-      - name: 📂 Copy history into results
-        if: success()
+      - name: 📂 Copy history into results (safe copy)
         run: |
           mkdir -p target/allure-results/history
-  cp -r target/allure-history/. target/allure-results/history/ || echo "⏳ No previous history"
+          if [ -d target/allure-history ]; then
+            cp -r target/allure-history/. target/allure-results/history/
+            echo "✅ History files copied:"
+            ls -l target/allure-results/history
+          else
+            echo "⚠️ No previous history to copy"
+          fi
+
       - name: 🧪 Run tests
         run: mvn clean test
 
@@ -48,10 +54,14 @@ jobs:
           echo "CI=GitHub Actions" > target/allure-results/environment.properties
           echo "OS=ubuntu-latest" >> target/allure-results/environment.properties
           echo "Java=17" >> target/allure-results/environment.properties
+
       - name: 📊 Generate Allure report
         run: |
           npm install -g allure-commandline --force
+          echo "📦 History before report generation:"
+          ls -l target/allure-results/history || echo "⚠️ No history found"
           allure generate target/allure-results --clean -o target/allure-report
+
       - name: 📤 Upload latest history for TREND
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,6 +92,7 @@ jobs:
                 {\"text\": \"📊 Смотреть Allure-отчёт\", \"url\": \"https://sergeyocheretko.github.io/RestAssured/\"}
               ]]
             }"
+
       - name: 🚀 Deploy to GitHub Pages
         if: success()
         uses: peaceiris/actions-gh-pages@v4
