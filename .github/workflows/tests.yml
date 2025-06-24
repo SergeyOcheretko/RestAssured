@@ -30,7 +30,7 @@ jobs:
         if: success()
         run: |
           mkdir -p target/allure-results/history
-          cp -r target/allure-history/* target/allure-results/history/ || echo "⏳ No previous history"
+  cp -r target/allure-history/. target/allure-results/history/ || echo "⏳ No previous history"
       - name: 🧪 Run tests
         run: mvn clean test
 
