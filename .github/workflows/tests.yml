@@ -19,14 +19,21 @@ jobs:
           distribution: 'temurin'
           java-version: 17
 
-      - name: 🪄 Clone gh-pages branch to get history
+      - name: 🪄 Clone gh-pages to get previous history
+        continue-on-error: true
         run: |
-          git clone --depth=1 --branch=gh-pages https://github.com/${{ github.repository }} gh-pages-copy || echo "⚠️ Ветка gh-pages пока не создана"
+          git config --global user.email "github-actions@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git clone --depth=1 --branch=gh-pages https://github.com/${{ github.repository }} gh-pages-copy || echo "⚠️ gh-pages branch not found"
 
       - name: 📂 Copy history into results
         run: |
           mkdir -p target/allure-results/history
-          cp -r gh-pages-copy/history/* target/allure-results/history/ 2>/dev/null || echo "⏳ История пока отсутствует"
+          if [ -d gh-pages-copy/history ]; then
+            cp -r gh-pages-copy/history/* target/allure-results/history/ || echo "⏳ No history to copy"
+          else
+            echo "📭 История из gh-pages не найдена"
+          fi
 
       - name: 🧪 Run tests
         run: mvn clean test
@@ -71,7 +78,7 @@ jobs:
               ]]
             }"
 
-      - name: 🚀 Deploy to GitHub Pages (with updated history)
+      - name: 🚀 Deploy to GitHub Pages (preserves trend)
         if: success()
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -79,6 +86,4 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
-
-
 
