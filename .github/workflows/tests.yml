@@ -93,14 +93,15 @@ jobs:
 
           Invoke-RestMethod -Uri $url -Method Post -Body $body
 
-      - name: 🚀 Deploy to GitHub Pages
-        if: success()
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: target/allure-report
-          force_orphan: true
+    - name: 🚀 Deploy to GitHub Pages
+      if: success()
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: gh-pages
+        publish_dir: target/allure-report
+        force_orphan: true
+
 
 
 
