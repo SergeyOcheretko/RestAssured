@@ -60,7 +60,7 @@ jobs:
           npm install -g allure-commandline --force
           echo "📦 History before report generation:"
           ls -l target/allure-results/history || echo "⚠️ No history found"
-          allure generate target/allure-results --clean -o target/allure-report
+          allure generate target/allure-results --clean -o target/allure-results
 
       - name: 📤 Upload latest history for TREND
         if: always()
