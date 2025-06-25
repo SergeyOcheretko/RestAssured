@@ -1,0 +1,55 @@
+stages:
+  - test
+  - report
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "-B -DskipTests=false"
+  ALLURE_RESULTS: "target/allure-results"
+  ALLURE_REPORT: "target/allure-report"
+
+cache:
+  paths:
+    - .m2/repository
+
+test_restassured:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - echo "🧪 Running tests"
+    - mvn $MAVEN_CLI_OPTS clean test
+  artifacts:
+    paths:
+      - $ALLURE_RESULTS
+    expire_in: 1 day
+
+generate_allure:
+  stage: report
+  image: node:20
+  dependencies:
+    - test_restassured
+  before_script:
+    - npm install -g allure-commandline
+  script:
+    - echo "📊 Generating Allure report"
+    - mkdir -p $ALLURE_REPORT
+    - allure generate $ALLURE_RESULTS --clean -o $ALLURE_REPORT
+    - cp -r $ALLURE_RESULTS/history $ALLURE_REPORT/history || echo "⚠️ No previous history"
+  artifacts:
+    paths:
+      - $ALLURE_REPORT
+    expire_in: 7 days
+
+pages:
+  stage: deploy
+  dependencies:
+    - generate_allure
+  script:
+    - mkdir -p public
+    - cp -r $ALLURE_REPORT/* public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
