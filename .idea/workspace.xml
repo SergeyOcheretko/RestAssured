@@ -7,7 +7,6 @@
     <list default="true" id="226190e4-ebf7-4a6c-8224-ef4fedbc909f" name="Default Changelist" comment="My first commit">
       <change beforePath="$PROJECT_DIR$/.github/workflows/tests.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/tests.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/RestAssured.iml" beforeDir="false" afterPath="$PROJECT_DIR$/RestAssured.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
