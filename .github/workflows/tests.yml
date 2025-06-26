@@ -24,7 +24,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: allure-history
-          path: target\allure-history
+          path: target/allure-history
 
       - name: 📂 Copy history into results
         shell: pwsh
@@ -32,7 +32,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path target\allure-results\history | Out-Null
           if (Test-Path target\allure-history) {
             Copy-Item target\allure-history\* -Recurse -Force -Destination target\allure-results\history\
-            Write-Host "✅ History files copied"
+            Write-Host "✅ History copied"
           } else {
             Write-Host "⚠️ No previous history to copy"
           }
@@ -43,9 +43,7 @@ jobs:
       - name: 🧬 Add Allure metadata
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path target\allure-results | Out-Null
-
-          @"
+          $executor = @'
   {
     "name": "GitHub Actions",
     "type": "github",
@@ -54,15 +52,13 @@ jobs:
     "buildOrder": "${{ github.run_number }}",
     "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   }
-  "@ | Set-Content -Path target\allure-results\executor.json -Encoding UTF8
-
-          @"
+  '@
+          $envProps = @'
   CI=GitHub Actions
   OS=windows-latest
   Java=17
-  "@ | Set-Content -Path target\allure-results\environment.properties -Encoding UTF8
-
-          @"
+  '@
+          $categories = @'
   [
     {
       "name": "AssertionError",
@@ -80,7 +76,13 @@ jobs:
       "matchedMessages": ["Connection refused", "No route to host"]
     }
   ]
-  "@ | Set-Content -Path target\allure-results\categories.json -Encoding UTF8
+  '@
+
+          $outPath = "target\allure-results"
+          New-Item -ItemType Directory -Force -Path $outPath | Out-Null
+          $executor | Set-Content "$outPath\executor.json" -Encoding UTF8
+          $envProps | Set-Content "$outPath\environment.properties" -Encoding UTF8
+          $categories | Set-Content "$outPath\categories.json" -Encoding UTF8
 
       - name: 📊 Generate Allure report
         shell: pwsh
@@ -107,15 +109,15 @@ jobs:
           $count = (Get-ChildItem -Recurse -File target\allure-results).Count
           if ($count -eq 0) {
             $text = "⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
-  } else {
-  $text = "✅ RestAssuredTests — сборка успешна"
-  }
+          } else {
+            $text = "✅ RestAssuredTests — сборка успешна"
+          }
 
-  $body = @{
-  chat_id = 488207930
-  parse_mode = "HTML"
-  text = $text
-reply_markup = '{"inline_keyboard": [[{"text": "📊 Смотреть Allure-отчёт", "url": "https://sergeyocheretko.github.io/RestAssured/"}]]}'
+          $body = @{
+            chat_id = 488207930
+            parse_mode = "HTML"
+            text = $text
+            reply_markup = '{"inline_keyboard": [[{"text": "📊 Смотреть Allure-отчёт", "url": "https://sergeyocheretko.github.io/RestAssured/"}]]}'
 }
 
   Invoke-RestMethod -Uri "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" -Method Post -Body $body
