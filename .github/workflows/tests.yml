@@ -26,15 +26,14 @@ jobs:
           name: allure-history
           path: target/allure-history
 
-      - name: 📂 Copy history into results (safe copy)
+      - name: 📂 Copy history into results
         run: |
           mkdir -p target/allure-results/history
           if [ -d target/allure-history ]; then
             cp -r target/allure-history/. target/allure-results/history/
-            echo "✅ History files copied:"
-            ls -l target/allure-results/history
+            echo "✅ History files copied"
           else
-            echo "⚠️ No previous history to copy"
+            echo "⚠️ No previous history"
           fi
 
       - name: 🧪 Run tests
@@ -43,24 +42,48 @@ jobs:
       - name: 🧬 Add Allure metadata
         run: |
           mkdir -p target/allure-results
-              cat <<EOF > target/allure-results/executor.json '{
+
+          cat <<EOF > target/allure-results/executor.json
+          {
             "name": "GitHub Actions",
             "type": "github",
             "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "buildName": "${{ github.workflow }}",
             "buildOrder": "${{ github.run_number }}",
             "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }' > target/allure-results/executor.json
-          echo "CI=GitHub Actions" > target/allure-results/environment.properties
-          echo "OS=ubuntu-latest" >> target/allure-results/environment.properties
-          echo "Java=17" >> target/allure-results/environment.properties
+          }
+          EOF
+
+          cat <<EOF > target/allure-results/environment.properties
+          CI=GitHub Actions
+          OS=ubuntu-latest
+          Java=17
+          EOF
+
+          cat <<EOF > target/allure-results/categories.json
+          [
+            {
+              "name": "AssertionError",
+              "matchedStatuses": ["failed"],
+              "matchedMessages": ["expected .* but found .*"]
+            },
+            {
+              "name": "Timeouts",
+              "matchedStatuses": ["broken"],
+              "matchedMessages": ["(?i).*timed out.*"]
+            },
+            {
+              "name": "Infrastructure issues",
+              "matchedStatuses": ["broken"],
+              "matchedMessages": ["Connection refused", "No route to host"]
+            }
+          ]
+          EOF
 
       - name: 📊 Generate Allure report
         run: |
           npm install -g allure-commandline --force
-          echo "📦 History before report generation:"
-          ls -l target/allure-results/history || echo "⚠️ No history found"
-          allure generate target/allure-results --clean -o target/allure-results
+          allure generate target/allure-results --clean -o target/allure-report
 
       - name: 📤 Upload latest history for TREND
         if: always()
@@ -101,9 +124,3 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
-
-
-
-
-
-

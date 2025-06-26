@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="226190e4-ebf7-4a6c-8224-ef4fedbc909f" name="Default Changelist" comment="My first commit">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/tests.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/tests.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="226190e4-ebf7-4a6c-8224-ef4fedbc909f" name="Default Changelist" comment="My first commit" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -131,13 +128,6 @@
       <workItem from="1750848098509" duration="10192000" />
       <workItem from="1750937426177" duration="123000" />
       <workItem from="1750937577351" duration="2801000" />
-    </task>
-    <task id="LOCAL-00006" summary="My first commit">
-      <created>1750678309162</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1750678309162</updated>
     </task>
     <task id="LOCAL-00007" summary="My first commit">
       <created>1750679038665</created>
@@ -475,7 +465,14 @@
       <option name="project" value="LOCAL" />
       <updated>1750938955057</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="My first commit">
+      <created>1750945263399</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1750945263399</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
