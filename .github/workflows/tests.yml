@@ -43,40 +43,42 @@ jobs:
       - name: 🧬 Add Allure metadata
         shell: pwsh
         run: |
-          $executor = @'
-  {
-    "name": "GitHub Actions",
-    "type": "github",
-    "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-    "buildName": "${{ github.workflow }}",
-    "buildOrder": "${{ github.run_number }}",
-    "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  }
-  '@
-          $envProps = @'
-  CI=GitHub Actions
-  OS=windows-latest
-  Java=17
-  '@
-          $categories = @'
-  [
-    {
-      "name": "AssertionError",
-      "matchedStatuses": ["failed"],
-      "matchedMessages": ["expected .* but found .*"]
-    },
-    {
-      "name": "Timeouts",
-      "matchedStatuses": ["broken"],
-      "matchedMessages": ["(?i).*timed out.*"]
-    },
-    {
-      "name": "Infrastructure issues",
-      "matchedStatuses": ["broken"],
-      "matchedMessages": ["Connection refused", "No route to host"]
-    }
-  ]
-  '@
+          $executor = @"
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "buildName": "${{ github.workflow }}",
+            "buildOrder": "${{ github.run_number }}",
+            "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          "@
+
+          $envProps = @"
+          CI=GitHub Actions
+          OS=windows-latest
+          Java=17
+          "@
+
+          $categories = @"
+          [
+            {
+              "name": "AssertionError",
+              "matchedStatuses": ["failed"],
+              "matchedMessages": ["expected .* but found .*"]
+            },
+            {
+              "name": "Timeouts",
+              "matchedStatuses": ["broken"],
+              "matchedMessages": ["(?i).*timed out.*"]
+            },
+            {
+              "name": "Infrastructure issues",
+              "matchedStatuses": ["broken"],
+              "matchedMessages": ["Connection refused", "No route to host"]
+            }
+          ]
+          "@
 
           $outPath = "target\allure-results"
           New-Item -ItemType Directory -Force -Path $outPath | Out-Null
@@ -118,15 +120,15 @@ jobs:
             parse_mode = "HTML"
             text = $text
             reply_markup = '{"inline_keyboard": [[{"text": "📊 Смотреть Allure-отчёт", "url": "https://sergeyocheretko.github.io/RestAssured/"}]]}'
-}
+          }
 
-  Invoke-RestMethod -Uri "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" -Method Post -Body $body
+          Invoke-RestMethod -Uri "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" -Method Post -Body $body
 
-- name: 🚀 Deploy to GitHub Pages
-  if: success()
-  uses: peaceiris/actions-gh-pages@v4
-  with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_branch: gh-pages
-    publish_dir: target/allure-report
-    force_orphan: true
+      - name: 🚀 Deploy to GitHub Pages
+        if: success()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/allure-report
+          force_orphan: true
