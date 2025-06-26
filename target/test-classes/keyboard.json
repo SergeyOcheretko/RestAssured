@@ -1,0 +1,16 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Открыть Allure",
+        "url": "http://172.31.240.1:8080/job/RestAssuredTests/lastSuccessfulBuild/allure/"
+      },
+      {
+        "text": "Смотреть билд",
+        "url": "http://172.31.240.1:8080/job/RestAssuredTests/"
+      }
+    ]
+  ]
+}
+
+

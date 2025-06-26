@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: 🧾 Checkout code
@@ -26,41 +26,71 @@ jobs:
           name: allure-history
           path: target/allure-history
 
-      - name: 📂 Copy history into results (safe copy)
+      - name: 📂 Copy history into results
+        shell: pwsh
         run: |
-          mkdir -p target/allure-results/history
-          if [ -d target/allure-history ]; then
-            cp -r target/allure-history/. target/allure-results/history/
-            echo "✅ History files copied:"
-            ls -l target/allure-results/history
-          else
-            echo "⚠️ No previous history to copy"
-          fi
+          New-Item -ItemType Directory -Force -Path target\allure-results\history | Out-Null
+          if (Test-Path target\allure-history) {
+            Copy-Item target\allure-history\* -Recurse -Force -Destination target\allure-results\history\
+            Write-Host "✅ History copied"
+          } else {
+            Write-Host "⚠️ No previous history to copy"
+          }
 
       - name: 🧪 Run tests
         run: mvn clean test
 
       - name: 🧬 Add Allure metadata
+        shell: pwsh
         run: |
-          mkdir -p target/allure-results
-          echo '{
+          $executor = @"
+          {
             "name": "GitHub Actions",
             "type": "github",
             "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "buildName": "${{ github.workflow }}",
             "buildOrder": "${{ github.run_number }}",
             "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }' > target/allure-results/executor.json
-          echo "CI=GitHub Actions" > target/allure-results/environment.properties
-          echo "OS=ubuntu-latest" >> target/allure-results/environment.properties
-          echo "Java=17" >> target/allure-results/environment.properties
+          }
+          "@
+
+          $envProps = @"
+          CI=GitHub Actions
+          OS=windows-latest
+          Java=17
+          "@
+
+          $categories = @"
+          [
+            {
+              "name": "AssertionError",
+              "matchedStatuses": ["failed"],
+              "matchedMessages": ["expected .* but found .*"]
+            },
+            {
+              "name": "Timeouts",
+              "matchedStatuses": ["broken"],
+              "matchedMessages": ["(?i).*timed out.*"]
+            },
+            {
+              "name": "Infrastructure issues",
+              "matchedStatuses": ["broken"],
+              "matchedMessages": ["Connection refused", "No route to host"]
+            }
+          ]
+          "@
+
+          $outPath = "target\allure-results"
+          New-Item -ItemType Directory -Force -Path $outPath | Out-Null
+          $executor | Set-Content "$outPath\executor.json" -Encoding UTF8
+          $envProps | Set-Content "$outPath\environment.properties" -Encoding UTF8
+          $categories | Set-Content "$outPath\categories.json" -Encoding UTF8
 
       - name: 📊 Generate Allure report
+        shell: pwsh
         run: |
           npm install -g allure-commandline --force
-          echo "📦 History before report generation:"
-          ls -l target/allure-results/history || echo "⚠️ No history found"
-          allure generate target/allure-results --clean -o target/allure-results
+          allure generate target\allure-results --clean -o target\allure-report
 
       - name: 📤 Upload latest history for TREND
         if: always()
@@ -76,22 +106,23 @@ jobs:
           path: target/allure-report
 
       - name: 📬 Notify via Telegram
+        shell: pwsh
         run: |
-          COUNT=$(find target/allure-results -type f | wc -l)
-          if [ "$COUNT" -eq 0 ]; then
-            TEXT="⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
-          else
-            TEXT="✅ RestAssuredTests — сборка успешна"
-          fi
-          curl -s -X POST "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" \
-            -d chat_id=488207930 \
-            -d parse_mode=HTML \
-            --data-urlencode "text=$TEXT" \
-            --data-urlencode "reply_markup={
-              \"inline_keyboard\": [[
-                {\"text\": \"📊 Смотреть Allure-отчёт\", \"url\": \"https://sergeyocheretko.github.io/RestAssured/\"}
-              ]]
-            }"
+          $count = (Get-ChildItem -Recurse -File target\allure-results).Count
+          if ($count -eq 0) {
+            $text = "⚠️ RestAssuredTests — сборка прошла, но Allure-отчёт пуст"
+          } else {
+            $text = "✅ RestAssuredTests — сборка успешна"
+          }
+
+          $body = @{
+            chat_id = 488207930
+            parse_mode = "HTML"
+            text = $text
+            reply_markup = '{"inline_keyboard": [[{"text": "📊 Смотреть Allure-отчёт", "url": "https://sergeyocheretko.github.io/RestAssured/"}]]}'
+          }
+
+          Invoke-RestMethod -Uri "https://api.telegram.org/bot7061709468:AAG58ymjWRKuDFQc8zTH6t7FgYZFTeVlYhw/sendMessage" -Method Post -Body $body
 
       - name: 🚀 Deploy to GitHub Pages
         if: success()
@@ -101,9 +132,3 @@ jobs:
           publish_branch: gh-pages
           publish_dir: target/allure-report
           force_orphan: true
-
-
-
-
-
-
