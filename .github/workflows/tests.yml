@@ -46,7 +46,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path target\allure-results | Out-Null
 
-          Set-Content -Path target\allure-results\executor.json -Value @"
+  Set-Content -Path target\allure-results\executor.json -Value @"
   {
     "name": "GitHub Actions",
     "type": "github",
@@ -56,6 +56,7 @@ jobs:
     "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   }
   "@ -Encoding UTF8
+
 
           Set-Content -Path target\allure-results\environment.properties -Value @"
   CI=GitHub Actions
