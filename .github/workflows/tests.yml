@@ -33,7 +33,6 @@ jobs:
           if (Test-Path target\allure-history) {
             Copy-Item target\allure-history\* -Recurse -Force -Destination target\allure-results\history\
             Write-Host "✅ History files copied"
-            Get-ChildItem target\allure-results\history
           } else {
             Write-Host "⚠️ No previous history to copy"
           }
@@ -46,7 +45,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path target\allure-results | Out-Null
 
-  Set-Content -Path target\allure-results\executor.json -Value @"
+          @"
   {
     "name": "GitHub Actions",
     "type": "github",
@@ -55,16 +54,15 @@ jobs:
     "buildOrder": "${{ github.run_number }}",
     "buildUrl": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   }
-  "@ -Encoding UTF8
+  "@ | Set-Content -Path target\allure-results\executor.json -Encoding UTF8
 
-
-          Set-Content -Path target\allure-results\environment.properties -Value @"
+          @"
   CI=GitHub Actions
   OS=windows-latest
   Java=17
-  "@ -Encoding UTF8
+  "@ | Set-Content -Path target\allure-results\environment.properties -Encoding UTF8
 
-          Set-Content -Path target\allure-results\categories.json -Value @"
+          @"
   [
     {
       "name": "AssertionError",
@@ -82,7 +80,7 @@ jobs:
       "matchedMessages": ["Connection refused", "No route to host"]
     }
   ]
-  "@ -Encoding UTF8
+  "@ | Set-Content -Path target\allure-results\categories.json -Encoding UTF8
 
       - name: 📊 Generate Allure report
         shell: pwsh
