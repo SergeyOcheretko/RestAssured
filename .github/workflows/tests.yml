@@ -7,7 +7,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: 🧾 Checkout code
@@ -43,7 +43,7 @@ jobs:
       - name: 🧬 Add Allure metadata
         run: |
           mkdir -p target/allure-results
-          echo '{
+              cat <<EOF > target/allure-results/executor.json '{
             "name": "GitHub Actions",
             "type": "github",
             "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
